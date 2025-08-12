@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prayer Times</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/praytimes@1.2.0/praytimes.js"></script>
+</head>
+<body onload="initializeApp()">
+  <main class="container">
+    <h1>Prayer Times</h1>
+    <section class="controls">
+      <label for="date">Date:</label>
+      <input id="date" type="date" />
+
+      <label for="method">Method:</label>
+      <select id="method">
+        <option>MWL</option>
+        <option>ISNA</option>
+        <option>UmmAlQura</option>
+        <option>Egypt</option>
+      </select>
+
+      <label for="asr">Asr:</label>
+      <select id="asr">
+        <option value="standard">Standard</option>
+        <option value="hanafi">Hanafi</option>
+      </select>
+
+      <button id="useLocation">Use my location</button>
+
+      <div class="manual">
+        <label for="lat">Lat:</label>
+        <input id="lat" type="number" step="0.0001" />
+
+        <label for="lon">Lon:</label>
+        <input id="lon" type="number" step="0.0001" />
+      </div>
+
+      <button id="getTimes">Get Prayer Times</button>
+    </section>
+
+    <section id="result" class="result" hidden>
+      <h2>Times — <span id="result-date"></span></h2>
+      <table>
+        <tbody id="times-table"></tbody>
+      </table>
+    </section>
+
+    <p class="note">
+      Times are calculated locally using a PrayTimes-style algorithm. Timezone is detected from your browser.
+    </p>
+  </main>
+
+  <script>
+    // Initialize PrayTimes
+    const prayTimes = new PrayTimes('MWL');
+
+    function initializeApp() {
+      // Set today's date in yyyy-mm-dd format
+      const dateInput = document.getElementById('date');
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      dateInput.value = `${yyyy}-${mm}-${dd}`;
+
+      // Attempt to get location automatically
+      getLocationAndCalculate();
+    }
+
+    function getLocationAndCalculate() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            document.getElementById('lat').value = position.coords.latitude.toFixed(6);
+            document.getElementById('lon').value = position.coords.longitude.toFixed(6);
+            calculatePrayerTimes(position.coords.latitude, position.coords.longitude);
+          },
+          () => {
+            alert('Unable to get your location. Please enter latitude and longitude manually.');
+          }
+        );
+      } else {
+        alert('Geolocation is not supported by your browser.');
+      }
+    }
+
+    function calculatePrayerTimes(lat, lon) {
+      const dateStr = document.getElementById('date').value; // yyyy-mm-dd
+      const method = document.getElementById('method').value;
+      const asrMethod = document.getElementById('asr').value;
+
+      // Set method
+      prayTimes.setMethod(method);
+
+      // Parse date input
+      let dateObj;
+      if (dateStr) {
+        const parts = dateStr.split('-'); // ['yyyy', 'mm', 'dd']
+        dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+      } else {
+        dateObj = new Date();
+      }
+
+      // Calculate prayer times
+      const times = prayTimes.getTimes(
+        dateObj,
+        [lat, lon],
+        new Date().getTimezoneOffset() / -60,
+        false
+      );
+
+      displayPrayerTimes(times);
+    }
+
+    function displayPrayerTimes(times) {
+      const tbody = document.getElementById('times-table');
+      tbody.innerHTML = '';
+      for (const [name, time] of Object.entries(times)) {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${name}</td><td>${time}</td>`;
+        tbody.appendChild(row);
+      }
+      document.getElementById('result').hidden = false;
+
+      const dateDisplay = document.getElementById('result-date');
+      const dateVal = document.getElementById('date').value;
+      dateDisplay.textContent = dateVal || new Date().toLocaleDateString();
+    }
+
+    document.getElementById('getTimes').addEventListener('click', () => {
+      const lat = document.getElementById('lat').value;
+      const lon = document.getElementById('lon').value;
+      if (lat && lon) {
+        calculatePrayerTimes(parseFloat(lat), parseFloat(lon));
+      } else {
+        getLocationAndCalculate();
+      }
+    });
+
+    document.getElementById('useLocation').addEventListener('click', () => {
+      getLocationAndCalculate();
+    });
+  </script>
+</body>
+</html>
