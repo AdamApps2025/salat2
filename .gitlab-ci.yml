@@ -1,0 +1,20 @@
+pages:
+  script:
+    - mkdir .public
+    - cp index.html style.css script.js # include all static files needed
+  artifacts:
+    paths:
+      - .public
+  only:
+    - main
+..gitlab-ci.yml
+
+pages:
+  script:
+    - mkdir .public
+    - cp index.html style.css script.js # include all static files needed
+  artifacts:
+    paths:
+      - .public
+  only:
+    - main
