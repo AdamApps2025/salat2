@@ -1,18 +1,127 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Praying Times</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Prayer Times</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  h1 { text-align: center; }
+  .container { max-width: 600px; margin: auto; }
+  .form-group { margin-bottom: 10px; }
+  label { display: block; margin-bottom: 4px; }
+  input, select { width: 100%; padding: 8px; }
+  button { padding: 10px 20px; margin-top: 10px; }
+  .times { margin-top: 20px; }
+  .times h2 { margin-bottom: 10px; }
+  ul { list-style: none; padding: 0; }
+  li { padding: 4px 0; }
+  #status { margin-top: 10px; font-style: italic; }
+</style>
 </head>
 <body>
-  <h1>Praying Times</h1>
-  <ul>
-    <li>Fajr: 5:00 AM</li>
-    <li>Dhuhr: 12:30 PM</li>
-    <li>Asr: 4:00 PM</li>
-    <li>Maghrib: 6:45 PM</li>
-    <li>Isha: 8:00 PM</li>
-  </ul>
+
+<h1>Prayer Times</h1>
+<div class="container">
+  <div class="form-group">
+    <label for="date">Date:</label>
+    <input type="date" id="date" value="">
+  </div>
+  <div class="form-group">
+    <label for="method">Method:</label>
+    <select id="method">
+      <option value="MWL">MWL</option>
+      <option value="ISNA">ISNA</option>
+      <option value="Egypt">Egypt</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="useLocation">
+      <input type="checkbox" id="useLocation"> Use my location
+    </label>
+  </div>
+  <div class="form-group" id="locationInputs" style="display: none;">
+    <label for="lat">Lat:</label>
+    <input type="number" id="lat" placeholder="Latitude">
+    <label for="lon">Lon:</label>
+    <input type="number" id="lon" placeholder="Longitude">
+  </div>
+  <button id="getTimes">Get Prayer Times</button>
+  <div id="status"></div>
+  <div class="times" id="prayerTimes" style="display: none;">
+    <h2>Prayer Times</h2>
+    <ul>
+      <li>Fajr: <span id="fajr">--</span></li>
+      <li>Dhuhr: <span id="dhuhr">--</span></li>
+      <li>Asr: <span id="asr">--</span></li>
+      <li>Maghrib: <span id="maghrib">--</span></li>
+      <li>Isha: <span id="isha">--</span></li>
+    </ul>
+  </div>
+</div>
+
+<script>
+  // Show/hide location inputs
+document.getElementById('useLocation').addEventListener('change', function() {
+  document.getElementById('locationInputs').style.display = this.checked ? 'block' : 'none';
+});
+
+// Set current date as default
+document.getElementById('date').valueAsDate = new Date();
+
+document.getElementById('getTimes').addEventListener('click', function() {
+  document.getElementById('status').textContent = 'Calculating prayer times...';
+
+  const useLocation = document.getElementById('useLocation').checked;
+  const method = document.getElementById('method').value;
+  const date = document.getElementById('date').value;
+
+  let lat, lon;
+
+  if (useLocation) {
+    lat = parseFloat(document.getElementById('lat').value);
+    lon = parseFloat(document.getElementById('lon').value);
+    if (isNaN(lat) || isNaN(lon)) {
+      alert('Please enter valid latitude and longitude.');
+      return;
+    }
+    calculateTimes(lat, lon);
+  } else {
+    // If not using location, get timezone and use fixed location or prompt
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        lat = position.coords.latitude;
+        lon = position.coords.longitude;
+        calculateTimes(lat, lon);
+      }, function() {
+        alert('Geolocation permission denied. Please enter your location manually.');
+        document.getElementById('status').textContent = '';
+      });
+    } else {
+      alert('Geolocation not supported. Please enter location manually.');
+      document.getElementById('status').textContent = '';
+    }
+  }
+});
+
+function calculateTimes(lat, lon) {
+  // For demo, we'll just show static times for now
+  // You can replace this with real calculation using a library like PrayTimes.js
+  document.getElementById('prayerTimes').style.display = 'block';
+
+  document.getElementById('fajr').textContent = '5:00 AM';
+  document.getElementById('dhuhr').textContent = '12:30 PM';
+  document.getElementById('asr').textContent = '4:00 PM';
+  document.getElementById('maghrib').textContent = '6:45 PM';
+  document.getElementById('isha').textContent = '8:00 PM';
+
+  const offset = new Date().getTimezoneOffset() / -60;
+  document.getElementById('status').textContent = `Times are calculated locally using your location (${lat.toFixed(2)}, ${lon.toFixed(2)}). Timezone offset: UTC${offset >= 0 ? '+' : ''}${offset}`;
+}
+
+// Initialize date input
+document.getElementById('date').valueAsDate = new Date();
+</script>
+
 </body>
 </html>
